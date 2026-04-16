@@ -144,7 +144,7 @@ body{font-family:var(--font-sans)}
     <div class="sec-title">geometry — derived</div>
     <div class="grid4">
       <div class="metric"><div class="lbl">Plate length L_geo</div><div class="val" id="Lval">—</div><div class="unit">m</div></div>
-      <div class="metric"><div class="lbl">Available area A_geo = 2L_geoH</div><div class="val" id="Aval">—</div><div class="unit">m²</div></div>
+      <div class="metric"><div class="lbl">Available area A_geo</div><div class="val" id="Aval">—</div><div class="unit">m²</div></div>
       <div class="metric"><div class="lbl">Dh hot</div><div class="val" id="Dhh">—</div><div class="unit">mm</div></div>
       <div class="metric"><div class="lbl">Dh cold</div><div class="val" id="Dhc">—</div><div class="unit">mm</div></div>
     </div>
@@ -243,9 +243,9 @@ function calc(){
   const Areq=Qavg*1000/(U*LMTD);
   const Lreq=Areq/(2*H);
 
-  const p=bh+bc+2*t;
-  const n=(Rmax-Rmin)/p;
-  const Lgeo=Math.PI*n*(Rmax+Rmin);
+  const pitch=bh+bc+2*t;
+  const numTurns=(Rmax-Rmin)/pitch;
+  const Lgeo=Math.PI*numTurns*(Rmax+Rmin);
   const Ageo=2*Lgeo*H;
 
   const DsCheck=Math.sqrt(1.28*Lreq*(bh+bc+2*t)+C*C);
@@ -253,8 +253,8 @@ function calc(){
   const Vh=Gh/rhoh;
   const Vc=Gc/rhoc;
 
-  const dPh=1.45*Lreq*Vh*Vh*rhoh/(1705*1000);
-  const dPc=1.45*Lreq*Vc*Vc*rhoc/(1705*1000);
+  const dPh=1.45*Lgeo*Vh*Vh*rhoh/(1705*1000);
+  const dPc=1.45*Lgeo*Vc*Vc*rhoc/(1705*1000);
 
   const AreqWithMargin=Areq*(1+margin);
   const passes=Ageo>=AreqWithMargin;
