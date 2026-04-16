@@ -1,0 +1,308 @@
+
+<h2 class="sr-only">Spiral heat exchanger thermal design model — calculates required heat transfer area and checks against process heat balance</h2>
+
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--font-sans)}
+.wrap{padding:1rem 0}
+.section{margin-bottom:1.5rem}
+.sec-title{font-size:13px;font-weight:500;color:var(--color-text-secondary);text-transform:uppercase;letter-spacing:.05em;margin-bottom:.75rem;padding-bottom:.5rem;border-bottom:.5px solid var(--color-border-tertiary)}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+.grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.card{background:var(--color-background-secondary);border-radius:var(--border-radius-md);padding:.75rem 1rem}
+.card label{display:block;font-size:12px;color:var(--color-text-secondary);margin-bottom:4px}
+.card input,.card select{width:100%;font-size:14px;background:var(--color-background-primary);border:.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md);padding:6px 8px;color:var(--color-text-primary)}
+.metric{background:var(--color-background-secondary);border-radius:var(--border-radius-md);padding:.75rem 1rem;text-align:center}
+.metric .lbl{font-size:12px;color:var(--color-text-secondary);margin-bottom:4px}
+.metric .val{font-size:20px;font-weight:500;color:var(--color-text-primary)}
+.metric .unit{font-size:11px;color:var(--color-text-secondary)}
+.result-box{border-radius:var(--border-radius-lg);padding:1rem 1.25rem;border:.5px solid var(--color-border-tertiary);background:var(--color-background-primary)}
+.pass{border-color:#1D9E75;background:#E1F5EE}
+.fail{border-color:#E24B4A;background:#FCEBEB}
+.pass .verdict{color:#0F6E56;font-weight:500;font-size:16px}
+.fail .verdict{color:#A32D2D;font-weight:500;font-size:16px}
+.row-detail{display:flex;justify-content:space-between;align-items:baseline;padding:3px 0;border-bottom:.5px solid var(--color-border-tertiary);font-size:13px}
+.row-detail:last-child{border-bottom:none}
+.row-detail .k{color:var(--color-text-secondary)}
+.row-detail .v{font-weight:500;color:var(--color-text-primary)}
+.warn{background:#FAEEDA;border:.5px solid #BA7517;border-radius:var(--border-radius-md);padding:.5rem .75rem;font-size:12px;color:#633806;margin-top:.5rem}
+.info-row{display:flex;gap:8px;align-items:center;font-size:12px;color:var(--color-text-secondary);margin-top:.5rem}
+.tag{font-size:11px;padding:2px 8px;border-radius:var(--border-radius-md);font-weight:500}
+.tag-ok{background:#E1F5EE;color:#085041}
+.tag-warn{background:#FAEEDA;color:#633806}
+.tag-fail{background:#FCEBEB;color:#791F1F}
+.divider{height:.5px;background:var(--color-border-tertiary);margin:1.25rem 0}
+.fluid-hdr{display:flex;align-items:center;gap:8px;margin-bottom:.75rem}
+.dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+.dot-hot{background:#D85A30}
+.dot-cold{background:#378ADD}
+</style>
+
+<div class="wrap">
+
+<div class="section">
+  <div class="sec-title">geometry & materials</div>
+  <div class="grid3">
+    <div class="card">
+      <label>Spiral outer diameter Ds (mm)</label>
+      <input type="number" id="Ds" value="1020" step="10">
+    </div>
+    <div class="card">
+      <label>Core diameter C (mm)</label>
+      <input type="number" id="C" value="304" step="5">
+    </div>
+    <div class="card">
+      <label>Plate height H (mm)</label>
+      <input type="number" id="H" value="1220" step="10">
+    </div>
+    <div class="card">
+      <label>Hot side channel spacing bh (mm)</label>
+      <input type="number" id="bh" value="12" step="1">
+    </div>
+    <div class="card">
+      <label>Cold side channel spacing bc (mm)</label>
+      <input type="number" id="bc" value="12" step="1">
+    </div>
+    <div class="card">
+      <label>Plate thickness t (mm)</label>
+      <input type="number" id="t" value="3" step="0.5">
+    </div>
+  </div>
+  <div class="grid2" style="margin-top:10px">
+    <div class="card">
+      <label>Plate material</label>
+      <select id="matSel">
+        <option value="17.0">Duplex 2205 (17 W/m·K)</option>
+        <option value="16.0">316L Stainless (16 W/m·K)</option>
+        <option value="14.0">304 Stainless (14 W/m·K)</option>
+        <option value="45.0">Carbon Steel (45 W/m·K)</option>
+        <option value="11.0">Hastelloy C276 (11 W/m·K)</option>
+      </select>
+    </div>
+    <div class="card">
+      <label>Fouling factor Rf (m²·K/W)</label>
+      <input type="number" id="Rf" value="0.0002" step="0.0001">
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <div class="sec-title">process streams</div>
+  <div class="grid2">
+    <div>
+      <div class="fluid-hdr"><div class="dot dot-hot"></div><span style="font-size:13px;font-weight:500">Primary — Uranium Barren Liquor (hot)</span></div>
+      <div class="grid2">
+        <div class="card"><label>Tin (°C)</label><input type="number" id="Thi" value="20" step="1"></div>
+        <div class="card"><label>Tout (°C)</label><input type="number" id="Tho" value="80" step="1"></div>
+        <div class="card"><label>Cp (kJ/kg·K)</label><input type="number" id="Cph" value="3.3" step="0.1"></div>
+        <div class="card"><label>ṁ (kg/s)</label><input type="number" id="mh" value="5.42" step="0.1"></div>
+        <div class="card"><label>ρ (kg/m³)</label><input type="number" id="rhoh" value="1200" step="10"></div>
+        <div class="card"><label>μ (mPa·s)</label><input type="number" id="muh" value="1.5" step="0.1"></div>
+        <div class="card"><label>k (W/m·K)</label><input type="number" id="kh" value="0.62" step="0.01"></div>
+        <div class="card"><label>Pr</label><input type="number" id="Prh" value="10.1" step="0.1"></div>
+      </div>
+    </div>
+    <div>
+      <div class="fluid-hdr"><div class="dot dot-cold"></div><span style="font-size:13px;font-weight:500">Secondary — Caustic Slurry (cold)</span></div>
+      <div class="grid2">
+        <div class="card"><label>Tin (°C)</label><input type="number" id="Tci" value="90" step="1"></div>
+        <div class="card"><label>Tout (°C)</label><input type="number" id="Tco" value="54" step="1"></div>
+        <div class="card"><label>Cp (kJ/kg·K)</label><input type="number" id="Cpc" value="3.3" step="0.1"></div>
+        <div class="card"><label>ṁ (kg/s)</label><input type="number" id="mc" value="9.03" step="0.1"></div>
+        <div class="card"><label>ρ (kg/m³)</label><input type="number" id="rhoc" value="1300" step="10"></div>
+        <div class="card"><label>μ (mPa·s)</label><input type="number" id="muc" value="2.0" step="0.1"></div>
+        <div class="card"><label>k (W/m·K)</label><input type="number" id="kc" value="0.60" step="0.01"></div>
+        <div class="card"><label>Pr</label><input type="number" id="Prc" value="11.0" step="0.1"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <div class="sec-title">existing exchanger check</div>
+  <div class="grid2">
+    <div class="card"><label>Current installed HT area (m²)</label><input type="number" id="Ainstalled" value="60" step="1"></div>
+    <div class="card"><label>Design margin (%)</label><input type="number" id="margin" value="10" step="5"></div>
+  </div>
+</div>
+
+<button onclick="calc()" style="width:100%;padding:10px;font-size:15px;font-weight:500;margin-bottom:1.5rem;cursor:pointer">Calculate →</button>
+
+<div id="out" style="display:none">
+
+  <div class="section">
+    <div class="sec-title">heat balance</div>
+    <div class="grid4">
+      <div class="metric"><div class="lbl">Q hot side</div><div class="val" id="Qh">—</div><div class="unit">kW</div></div>
+      <div class="metric"><div class="lbl">Q cold side</div><div class="val" id="Qc">—</div><div class="unit">kW</div></div>
+      <div class="metric"><div class="lbl">LMTD</div><div class="val" id="LMTD">—</div><div class="unit">K</div></div>
+      <div class="metric"><div class="lbl">Balance error</div><div class="val" id="Qerr">—</div><div class="unit">%</div></div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="sec-title">geometry — derived</div>
+    <div class="grid4">
+      <div class="metric"><div class="lbl">Plate length L</div><div class="val" id="Lval">—</div><div class="unit">m</div></div>
+      <div class="metric"><div class="lbl">HT area A = 2LH</div><div class="val" id="Aval">—</div><div class="unit">m²</div></div>
+      <div class="metric"><div class="lbl">Dh hot</div><div class="val" id="Dhh">—</div><div class="unit">mm</div></div>
+      <div class="metric"><div class="lbl">Dh cold</div><div class="val" id="Dhc">—</div><div class="unit">mm</div></div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="sec-title">heat transfer coefficients (Morimoto–Hotta correlation)</div>
+    <div class="grid4">
+      <div class="metric"><div class="lbl">Re hot</div><div class="val" id="Reh">—</div><div class="unit">—</div></div>
+      <div class="metric"><div class="lbl">Re cold</div><div class="val" id="Rec">—</div><div class="unit">—</div></div>
+      <div class="metric"><div class="lbl">h hot</div><div class="val" id="hh">—</div><div class="unit">W/m²·K</div></div>
+      <div class="metric"><div class="lbl">h cold</div><div class="val" id="hc">—</div><div class="unit">W/m²·K</div></div>
+    </div>
+    <div class="grid2" style="margin-top:10px">
+      <div class="metric"><div class="lbl">U overall</div><div class="val" id="Uval">—</div><div class="unit">W/m²·K</div></div>
+      <div class="metric"><div class="lbl">Rm (spiral mid-radius)</div><div class="val" id="Rmval">—</div><div class="unit">mm</div></div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="sec-title">area requirement</div>
+    <div id="areaResult" class="result-box">
+      <div class="verdict" id="verdict">—</div>
+      <div style="margin-top:.75rem" id="detailRows"></div>
+      <div id="warnMsg"></div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="sec-title">pressure drop estimates</div>
+    <div class="grid2">
+      <div class="result-box">
+        <div style="font-size:13px;font-weight:500;color:var(--color-text-secondary);margin-bottom:.5rem">Hot side (primary)</div>
+        <div class="row-detail"><span class="k">Velocity V</span><span class="v" id="Vh">—</span></div>
+        <div class="row-detail"><span class="k">ΔP</span><span class="v" id="dPh">—</span></div>
+      </div>
+      <div class="result-box">
+        <div style="font-size:13px;font-weight:500;color:var(--color-text-secondary);margin-bottom:.5rem">Cold side (secondary)</div>
+        <div class="row-detail"><span class="k">Velocity V</span><span class="v" id="Vc">—</span></div>
+        <div class="row-detail"><span class="k">ΔP</span><span class="v" id="dPc">—</span></div>
+      </div>
+    </div>
+  </div>
+
+</div>
+</div>
+
+<script>
+function v(id){return parseFloat(document.getElementById(id).value)||0}
+
+function calc(){
+  const Ds=v('Ds')/1000, C=v('C')/1000, H=v('H')/1000;
+  const bh=v('bh')/1000, bc=v('bc')/1000, t=v('t')/1000;
+  const kp=parseFloat(document.getElementById('matSel').value);
+  const Rf=v('Rf');
+
+  const Thi=v('Thi'),Tho=v('Tho'),Tci=v('Tci'),Tco=v('Tco');
+  const Cph=v('Cph')*1000, Cpc=v('Cpc')*1000;
+  const mh=v('mh'), mc=v('mc');
+  const rhoh=v('rhoh'), rhoc=v('rhoc');
+  const muh=v('muh')/1000, muc=v('muc')/1000;
+  const kflh=v('kh'), kflc=v('kc');
+  const Prh=v('Prh'), Prc=v('Prc');
+  const Ainstalled=v('Ainstalled');
+  const margin=v('margin')/100;
+
+  const Qh=mh*Cph*(Tho-Thi)/1000;
+  const Qc=mc*Cpc*(Tci-Tco)/1000;
+  const Qavg=(Qh+Qc)/2;
+  const Qerr=Math.abs(Qh-Qc)/Qavg*100;
+
+  const dT1=Thi-Tco, dT2=Tho-Tci;
+  let LMTD;
+  if(Math.abs(dT1-dT2)<0.001) LMTD=dT1;
+  else LMTD=(dT1-dT2)/Math.log(dT1/dT2);
+
+  const Rmin=C/2, Rmax=Ds/2;
+  const Rm=(Rmin+Rmax)/2;
+
+  const Dhh=2*H*bh/(H+bh);
+  const Dhc=2*H*bc/(H+bc);
+
+  const Gh=mh/(H*bh);
+  const Gc=mc/(H*bc);
+
+  const Reh=Gh*Dhh/muh;
+  const Rec=Gc*Dhc/muc;
+
+  const Nuh=0.0239*(1+5.54*Dhh/Rm)*Math.pow(Reh,0.806)*Math.pow(Prh,0.286);
+  const Nuc=0.0239*(1+5.54*Dhc/Rm)*Math.pow(Rec,0.806)*Math.pow(Prc,0.286);
+
+  const hh=Nuh*kflh/Dhh;
+  const hc=Nuc*kflc/Dhc;
+
+  const U=1/(1/hh+t/kp+1/hc+Rf);
+
+  const Areq=Qavg*1000/(U*LMTD);
+  const L=Areq/(2*H);
+
+  const DsCheck=Math.sqrt(1.28*L*(bh+bc+2*t)+C*C);
+
+  const Vh=Gh/rhoh;
+  const Vc=Gc/rhoc;
+
+  const dPh=1.45*L*Vh*Vh*rhoh/(1705*1000);
+  const dPc=1.45*L*Vc*Vc*rhoc/(1705*1000);
+
+  const AreqWithMargin=Areq*(1+margin);
+  const passes=Ainstalled>=AreqWithMargin;
+  const margActual=(Ainstalled/Areq-1)*100;
+
+  document.getElementById('Qh').textContent=Qh.toFixed(1);
+  document.getElementById('Qc').textContent=Qc.toFixed(1);
+  document.getElementById('LMTD').textContent=LMTD.toFixed(2);
+  document.getElementById('Qerr').textContent=Qerr.toFixed(2);
+  document.getElementById('Lval').textContent=L.toFixed(2);
+  document.getElementById('Aval').textContent=(2*L*H).toFixed(2);
+  document.getElementById('Dhh').textContent=(Dhh*1000).toFixed(1);
+  document.getElementById('Dhc').textContent=(Dhc*1000).toFixed(1);
+  document.getElementById('Reh').textContent=Math.round(Reh).toLocaleString();
+  document.getElementById('Rec').textContent=Math.round(Rec).toLocaleString();
+  document.getElementById('hh').textContent=Math.round(hh);
+  document.getElementById('hc').textContent=Math.round(hc);
+  document.getElementById('Uval').textContent=Math.round(U);
+  document.getElementById('Rmval').textContent=(Rm*1000).toFixed(0);
+  document.getElementById('Vh').textContent=Vh.toFixed(3)+' m/s';
+  document.getElementById('Vc').textContent=Vc.toFixed(3)+' m/s';
+  document.getElementById('dPh').textContent=dPh.toFixed(2)+' kPa';
+  document.getElementById('dPc').textContent=dPc.toFixed(2)+' kPa';
+
+  const box=document.getElementById('areaResult');
+  box.className='result-box '+(passes?'pass':'fail');
+  document.getElementById('verdict').textContent=passes?'Installed area is sufficient':'Installed area is INSUFFICIENT';
+
+  const rows=[
+    ['Q (avg process duty)',Qavg.toFixed(1)+' kW'],
+    ['LMTD (counter-current)',LMTD.toFixed(2)+' K'],
+    ['U overall',Math.round(U)+' W/m²·K'],
+    ['Required HT area (Areq = Q/U·LMTD)',Areq.toFixed(2)+' m²'],
+    ['Required area incl. '+Math.round(margin*100)+'% margin',AreqWithMargin.toFixed(2)+' m²'],
+    ['Installed area',Ainstalled.toFixed(1)+' m²'],
+    ['Actual margin on installed',margActual.toFixed(1)+'%'],
+    ['Plate length L (from Areq = 2LH)',L.toFixed(2)+' m'],
+    ['Geometry check Ds (from L)',DsCheck.toFixed(3)+' m  [given '+Ds.toFixed(3)+' m]'],
+  ];
+
+  document.getElementById('detailRows').innerHTML=rows.map(r=>`<div class="row-detail"><span class="k">${r[0]}</span><span class="v">${r[1]}</span></div>`).join('');
+
+  let warn='';
+  if(Qerr>5) warn+=`<div class="warn">Heat balance error ${Qerr.toFixed(1)}% — verify stream flow rates and temperatures.</div>`;
+  if(LMTD<5) warn+=`<div class="warn">Very low LMTD (${LMTD.toFixed(2)} K) — temperature cross possible, verify flow arrangement.</div>`;
+  if(margActual<0&&margActual>-10) warn+=`<div class="warn">Area deficit is marginal (${Math.abs(margActual).toFixed(1)}% short) — consider adjusting plate height or channel spacing.</div>`;
+  if(Math.abs(DsCheck-Ds)>0.05) warn+=`<div class="warn">Geometry check: Ds from plate length is ${(DsCheck*1000).toFixed(0)} mm vs given ${(Ds*1000).toFixed(0)} mm — spiral winding geometry mismatch.</div>`;
+  document.getElementById('warnMsg').innerHTML=warn;
+
+  document.getElementById('out').style.display='block';
+}
+
+calc();
+</script>
