@@ -244,8 +244,8 @@ function calc(){
   const Lreq=Areq/(2*H);
 
   const pitch=bh+bc+2*t;
-  const numTurns=(Rmax-Rmin)/pitch;
-  const Lgeo=Math.PI*numTurns*(Rmax+Rmin);
+  const spiralTurns=(Rmax-Rmin)/pitch;
+  const Lgeo=Math.PI*spiralTurns*(Rmax+Rmin);
   const Ageo=2*Lgeo*H;
 
   const DsCheck=Math.sqrt(1.28*Lreq*(bh+bc+2*t)+C*C);
