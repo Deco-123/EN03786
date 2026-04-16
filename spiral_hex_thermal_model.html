@@ -122,7 +122,6 @@ body{font-family:var(--font-sans)}
 <div class="section">
   <div class="sec-title">existing exchanger check</div>
   <div class="grid2">
-    <div class="card"><label>Current installed HT area (m²)</label><input type="number" id="Ainstalled" value="60" step="1"></div>
     <div class="card"><label>Design margin (%)</label><input type="number" id="margin" value="10" step="5"></div>
   </div>
 </div>
@@ -144,8 +143,8 @@ body{font-family:var(--font-sans)}
   <div class="section">
     <div class="sec-title">geometry — derived</div>
     <div class="grid4">
-      <div class="metric"><div class="lbl">Plate length L</div><div class="val" id="Lval">—</div><div class="unit">m</div></div>
-      <div class="metric"><div class="lbl">HT area A = 2LH</div><div class="val" id="Aval">—</div><div class="unit">m²</div></div>
+      <div class="metric"><div class="lbl">Plate length L_geo</div><div class="val" id="Lval">—</div><div class="unit">m</div></div>
+      <div class="metric"><div class="lbl">Available area A_geo = 2L_geoH</div><div class="val" id="Aval">—</div><div class="unit">m²</div></div>
       <div class="metric"><div class="lbl">Dh hot</div><div class="val" id="Dhh">—</div><div class="unit">mm</div></div>
       <div class="metric"><div class="lbl">Dh cold</div><div class="val" id="Dhc">—</div><div class="unit">mm</div></div>
     </div>
@@ -209,7 +208,6 @@ function calc(){
   const muh=v('muh')/1000, muc=v('muc')/1000;
   const kflh=v('kh'), kflc=v('kc');
   const Prh=v('Prh'), Prc=v('Prc');
-  const Ainstalled=v('Ainstalled');
   const margin=v('margin')/100;
 
   const Qh=mh*Cph*(Thi-Tho)/1000;
@@ -243,26 +241,31 @@ function calc(){
   const U=1/(1/hh+t/kp+1/hc+Rf);
 
   const Areq=Qavg*1000/(U*LMTD);
-  const L=Areq/(2*H);
+  const Lreq=Areq/(2*H);
 
-  const DsCheck=Math.sqrt(1.28*L*(bh+bc+2*t)+C*C);
+  const p=bh+bc+2*t;
+  const n=(Rmax-Rmin)/p;
+  const Lgeo=Math.PI*n*(Rmax+Rmin);
+  const Ageo=2*Lgeo*H;
+
+  const DsCheck=Math.sqrt(1.28*Lreq*(bh+bc+2*t)+C*C);
 
   const Vh=Gh/rhoh;
   const Vc=Gc/rhoc;
 
-  const dPh=1.45*L*Vh*Vh*rhoh/(1705*1000);
-  const dPc=1.45*L*Vc*Vc*rhoc/(1705*1000);
+  const dPh=1.45*Lreq*Vh*Vh*rhoh/(1705*1000);
+  const dPc=1.45*Lreq*Vc*Vc*rhoc/(1705*1000);
 
   const AreqWithMargin=Areq*(1+margin);
-  const passes=Ainstalled>=AreqWithMargin;
-  const margActual=(Ainstalled/Areq-1)*100;
+  const passes=Ageo>=AreqWithMargin;
+  const margActual=(Ageo/Areq-1)*100;
 
   document.getElementById('Qh').textContent=Qh.toFixed(1);
   document.getElementById('Qc').textContent=Qc.toFixed(1);
   document.getElementById('LMTD').textContent=LMTD.toFixed(2);
   document.getElementById('Qerr').textContent=Qerr.toFixed(2);
-  document.getElementById('Lval').textContent=L.toFixed(2);
-  document.getElementById('Aval').textContent=(2*L*H).toFixed(2);
+  document.getElementById('Lval').textContent=Lgeo.toFixed(2);
+  document.getElementById('Aval').textContent=Ageo.toFixed(2);
   document.getElementById('Dhh').textContent=(Dhh*1000).toFixed(1);
   document.getElementById('Dhc').textContent=(Dhc*1000).toFixed(1);
   document.getElementById('Reh').textContent=Math.round(Reh).toLocaleString();
@@ -278,7 +281,7 @@ function calc(){
 
   const box=document.getElementById('areaResult');
   box.className='result-box '+(passes?'pass':'fail');
-  document.getElementById('verdict').textContent=passes?'Installed area is sufficient':'Installed area is INSUFFICIENT';
+  document.getElementById('verdict').textContent=passes?'Available area from geometry is sufficient':'Available area from geometry is INSUFFICIENT';
 
   const rows=[
     ['Q (avg process duty)',Qavg.toFixed(1)+' kW'],
@@ -286,10 +289,11 @@ function calc(){
     ['U overall',Math.round(U)+' W/m²·K'],
     ['Required HT area (Areq = Q/U·LMTD)',Areq.toFixed(2)+' m²'],
     ['Required area incl. '+Math.round(margin*100)+'% margin',AreqWithMargin.toFixed(2)+' m²'],
-    ['Installed area',Ainstalled.toFixed(1)+' m²'],
-    ['Actual margin on installed',margActual.toFixed(1)+'%'],
-    ['Plate length L (from Areq = 2LH)',L.toFixed(2)+' m'],
-    ['Geometry check Ds (from L)',DsCheck.toFixed(3)+' m  [given '+Ds.toFixed(3)+' m]'],
+    ['Geometric plate length L_geo',Lgeo.toFixed(2)+' m'],
+    ['Available area (from geometry)',Ageo.toFixed(2)+' m²'],
+    ['Actual margin on available area',margActual.toFixed(1)+'%'],
+    ['Plate length L_req (from Areq = 2LH)',Lreq.toFixed(2)+' m'],
+    ['Geometry check Ds (from L_req)',DsCheck.toFixed(3)+' m  [given '+Ds.toFixed(3)+' m]'],
   ];
 
   document.getElementById('detailRows').innerHTML=rows.map(r=>`<div class="row-detail"><span class="k">${r[0]}</span><span class="v">${r[1]}</span></div>`).join('');
