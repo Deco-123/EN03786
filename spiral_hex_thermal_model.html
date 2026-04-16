@@ -212,8 +212,8 @@ function calc(){
   const Ainstalled=v('Ainstalled');
   const margin=v('margin')/100;
 
-  const Qh=mh*Cph*Math.abs(Thi-Tho)/1000;
-  const Qc=mc*Cpc*Math.abs(Tco-Tci)/1000;
+  const Qh=mh*Cph*(Thi-Tho)/1000;
+  const Qc=mc*Cpc*(Tco-Tci)/1000;
   const Qavg=(Qh+Qc)/2;
   const Qerr=Math.abs(Qh-Qc)/Qavg*100;
 
