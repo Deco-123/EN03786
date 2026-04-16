@@ -91,29 +91,29 @@ body{font-family:var(--font-sans)}
   <div class="sec-title">process streams</div>
   <div class="grid2">
     <div>
-      <div class="fluid-hdr"><div class="dot dot-hot"></div><span style="font-size:13px;font-weight:500">Primary — Uranium Barren Liquor (hot)</span></div>
+      <div class="fluid-hdr"><div class="dot dot-hot"></div><span style="font-size:13px;font-weight:500">Primary — Caustic Slurry (hot)</span></div>
       <div class="grid2">
-        <div class="card"><label>Tin (°C)</label><input type="number" id="Thi" value="20" step="1"></div>
-        <div class="card"><label>Tout (°C)</label><input type="number" id="Tho" value="80" step="1"></div>
+        <div class="card"><label>Tin (°C)</label><input type="number" id="Thi" value="90" step="1"></div>
+        <div class="card"><label>Tout (°C)</label><input type="number" id="Tho" value="54" step="1"></div>
         <div class="card"><label>Cp (kJ/kg·K)</label><input type="number" id="Cph" value="3.3" step="0.1"></div>
-        <div class="card"><label>ṁ (kg/s)</label><input type="number" id="mh" value="5.42" step="0.1"></div>
-        <div class="card"><label>ρ (kg/m³)</label><input type="number" id="rhoh" value="1200" step="10"></div>
-        <div class="card"><label>μ (mPa·s)</label><input type="number" id="muh" value="1.5" step="0.1"></div>
-        <div class="card"><label>k (W/m·K)</label><input type="number" id="kh" value="0.62" step="0.01"></div>
-        <div class="card"><label>Pr</label><input type="number" id="Prh" value="10.1" step="0.1"></div>
+        <div class="card"><label>ṁ (kg/s)</label><input type="number" id="mh" value="9.03" step="0.1"></div>
+        <div class="card"><label>ρ (kg/m³)</label><input type="number" id="rhoh" value="1300" step="10"></div>
+        <div class="card"><label>μ (mPa·s)</label><input type="number" id="muh" value="2.0" step="0.1"></div>
+        <div class="card"><label>k (W/m·K)</label><input type="number" id="kh" value="0.60" step="0.01"></div>
+        <div class="card"><label>Pr</label><input type="number" id="Prh" value="11.0" step="0.1"></div>
       </div>
     </div>
     <div>
-      <div class="fluid-hdr"><div class="dot dot-cold"></div><span style="font-size:13px;font-weight:500">Secondary — Caustic Slurry (cold)</span></div>
+      <div class="fluid-hdr"><div class="dot dot-cold"></div><span style="font-size:13px;font-weight:500">Secondary — Uranium Barren Liquor (cold)</span></div>
       <div class="grid2">
-        <div class="card"><label>Tin (°C)</label><input type="number" id="Tci" value="90" step="1"></div>
-        <div class="card"><label>Tout (°C)</label><input type="number" id="Tco" value="54" step="1"></div>
+        <div class="card"><label>Tin (°C)</label><input type="number" id="Tci" value="20" step="1"></div>
+        <div class="card"><label>Tout (°C)</label><input type="number" id="Tco" value="80" step="1"></div>
         <div class="card"><label>Cp (kJ/kg·K)</label><input type="number" id="Cpc" value="3.3" step="0.1"></div>
-        <div class="card"><label>ṁ (kg/s)</label><input type="number" id="mc" value="9.03" step="0.1"></div>
-        <div class="card"><label>ρ (kg/m³)</label><input type="number" id="rhoc" value="1300" step="10"></div>
-        <div class="card"><label>μ (mPa·s)</label><input type="number" id="muc" value="2.0" step="0.1"></div>
-        <div class="card"><label>k (W/m·K)</label><input type="number" id="kc" value="0.60" step="0.01"></div>
-        <div class="card"><label>Pr</label><input type="number" id="Prc" value="11.0" step="0.1"></div>
+        <div class="card"><label>ṁ (kg/s)</label><input type="number" id="mc" value="5.42" step="0.1"></div>
+        <div class="card"><label>ρ (kg/m³)</label><input type="number" id="rhoc" value="1200" step="10"></div>
+        <div class="card"><label>μ (mPa·s)</label><input type="number" id="muc" value="1.5" step="0.1"></div>
+        <div class="card"><label>k (W/m·K)</label><input type="number" id="kc" value="0.62" step="0.01"></div>
+        <div class="card"><label>Pr</label><input type="number" id="Prc" value="10.1" step="0.1"></div>
       </div>
     </div>
   </div>
@@ -212,8 +212,8 @@ function calc(){
   const Ainstalled=v('Ainstalled');
   const margin=v('margin')/100;
 
-  const Qh=mh*Cph*(Tho-Thi)/1000;
-  const Qc=mc*Cpc*(Tci-Tco)/1000;
+  const Qh=mh*Cph*(Thi-Tho)/1000;
+  const Qc=mc*Cpc*(Tco-Tci)/1000;
   const Qavg=(Qh+Qc)/2;
   const Qerr=Math.abs(Qh-Qc)/Qavg*100;
 
